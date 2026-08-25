@@ -354,6 +354,139 @@
 
     .field select { padding-right: 34px; }
 
+    .multi-select {
+      position: relative;
+    }
+
+    .multi-select-button {
+      width: 100%;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 11px;
+      color: #344054;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .multi-select-button:hover { background: #f8fafc; }
+
+    .multi-select-button:focus-visible {
+      outline: 3px solid rgba(24, 90, 219, .24);
+      outline-offset: 2px;
+    }
+
+    .multi-select-button .caret {
+      flex: 0 0 auto;
+      color: #98a2b3;
+      transition: transform .15s ease;
+    }
+
+    .multi-select.open .multi-select-button .caret { transform: rotate(180deg); }
+
+    .multi-select-menu {
+      position: absolute;
+      z-index: 30;
+      top: calc(100% + 7px);
+      left: 0;
+      right: 0;
+      display: none;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(20, 33, 61, .16);
+    }
+
+    .multi-select.open .multi-select-menu { display: block; }
+
+    .multi-select-search {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: #fbfcfe;
+    }
+
+    .multi-select-search input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+
+    .multi-select-options {
+      max-height: 260px;
+      overflow: auto;
+      padding: 6px;
+    }
+
+    .multi-select-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      min-height: 40px;
+      padding: 9px 8px;
+      border-radius: 9px;
+      cursor: pointer;
+      color: #344054;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .multi-select-option:hover { background: #f2f6fc; }
+
+    .multi-select-option input {
+      width: 17px;
+      height: 17px;
+      min-height: auto;
+      margin: 1px 0 0;
+      flex: 0 0 auto;
+      accent-color: var(--brand);
+      padding: 0;
+      border-radius: 4px;
+    }
+
+    .multi-select-empty {
+      padding: 14px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .multi-select-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 10px;
+      border-top: 1px solid var(--border);
+      background: #fbfcfe;
+    }
+
+    .multi-select-count {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .multi-select-clear {
+      border: 0;
+      padding: 6px 7px;
+      border-radius: 8px;
+      color: var(--brand);
+      background: transparent;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .multi-select-clear:hover { background: rgba(24, 90, 219, .08); }
+
     .date-filter-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin-top: 12px;
@@ -969,7 +1102,7 @@
       <div class="section-heading">
         <div>
           <h2>Pesquisa e filtros</h2>
-          <p>Use os filtros das colunas C, D e E e, se desejar, refine a consulta pelo período de envio.</p>
+          <p>Use os filtros das colunas C, D e E. No filtro Regional, você pode selecionar uma ou várias regionais ao mesmo tempo e, se desejar, refinar a consulta pelo período de envio.</p>
         </div>
       </div>
 
@@ -980,8 +1113,23 @@
 
       <div class="filter-grid">
         <div class="field">
-          <label for="filterRegional">Regional</label>
-          <select id="filterRegional"><option value="">Todas as regionais</option></select>
+          <label id="regionalFilterLabel">Regional</label>
+          <div class="multi-select" id="regionalMultiSelect">
+            <button class="multi-select-button" id="regionalMultiBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="regionalFilterLabel regionalMultiText">
+              <span id="regionalMultiText">Todas as regionais</span>
+              <span class="caret" aria-hidden="true">⌄</span>
+            </button>
+            <div class="multi-select-menu" id="regionalMenu">
+              <div class="multi-select-search">
+                <input id="regionalSearch" type="search" placeholder="Buscar regional…" autocomplete="off" aria-label="Buscar regional" />
+              </div>
+              <div class="multi-select-options" id="regionalOptions" role="group" aria-label="Selecione uma ou mais regionais"></div>
+              <div class="multi-select-footer">
+                <span class="multi-select-count" id="regionalSelectedCount">Nenhuma selecionada</span>
+                <button class="multi-select-clear" id="clearRegionalsBtn" type="button">Limpar</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label for="filterEscola">Escola</label>
@@ -1158,6 +1306,8 @@
         page: 1,
         view: 'cards',
         usingFallback: false,
+        selectedRegionals: new Set(),
+        regionalLabels: new Map(),
         periodStart: '',
         periodEnd: ''
       };
@@ -1168,7 +1318,14 @@
         sourceBadge: document.getElementById('sourceBadge'),
         refreshBtn: document.getElementById('refreshBtn'),
         searchInput: document.getElementById('searchInput'),
-        filterRegional: document.getElementById('filterRegional'),
+        regionalMultiSelect: document.getElementById('regionalMultiSelect'),
+        regionalMultiBtn: document.getElementById('regionalMultiBtn'),
+        regionalMultiText: document.getElementById('regionalMultiText'),
+        regionalMenu: document.getElementById('regionalMenu'),
+        regionalSearch: document.getElementById('regionalSearch'),
+        regionalOptions: document.getElementById('regionalOptions'),
+        regionalSelectedCount: document.getElementById('regionalSelectedCount'),
+        clearRegionalsBtn: document.getElementById('clearRegionalsBtn'),
         filterEscola: document.getElementById('filterEscola'),
         filterProfissional: document.getElementById('filterProfissional'),
         dateStart: document.getElementById('dateStart'),
@@ -1435,8 +1592,61 @@
         if ([...select.options].some(opt => opt.value === current)) select.value = current;
       }
 
+      function updateRegionalButton() {
+        const selected = [...state.selectedRegionals];
+        if (!selected.length) {
+          els.regionalMultiText.textContent = 'Todas as regionais';
+          els.regionalSelectedCount.textContent = 'Nenhuma selecionada';
+          els.clearRegionalsBtn.disabled = true;
+          return;
+        }
+        if (selected.length === 1) {
+          els.regionalMultiText.textContent = state.regionalLabels.get(selected[0]) || selected[0];
+        } else {
+          els.regionalMultiText.textContent = `${selected.length} regionais selecionadas`;
+        }
+        els.regionalSelectedCount.textContent = `${selected.length} ${selected.length === 1 ? 'regional selecionada' : 'regionais selecionadas'}`;
+        els.clearRegionalsBtn.disabled = false;
+      }
+
+      function filterRegionalOptions() {
+        const query = normalize(els.regionalSearch.value);
+        let visible = 0;
+        els.regionalOptions.querySelectorAll('.multi-select-option').forEach(option => {
+          const match = !query || normalize(option.dataset.label).includes(query);
+          option.hidden = !match;
+          if (match) visible += 1;
+        });
+        let empty = els.regionalOptions.querySelector('.multi-select-empty');
+        if (!visible) {
+          if (!empty) {
+            empty = document.createElement('div');
+            empty.className = 'multi-select-empty';
+            empty.textContent = 'Nenhuma regional encontrada.';
+            els.regionalOptions.appendChild(empty);
+          }
+        } else if (empty) {
+          empty.remove();
+        }
+      }
+
+      function populateRegionalFilter() {
+        const labels = bestLabelMap(state.all, 'regional');
+        state.regionalLabels = labels;
+        const validKeys = new Set(labels.keys());
+        state.selectedRegionals = new Set([...state.selectedRegionals].filter(key => validKeys.has(key)));
+        const options = [...labels.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' }));
+        els.regionalOptions.innerHTML = options.map(([value, label]) => `
+          <label class="multi-select-option" data-label="${escapeHtml(label)}">
+            <input type="checkbox" value="${escapeHtml(value)}" ${state.selectedRegionals.has(value) ? 'checked' : ''} />
+            <span>${escapeHtml(label)}</span>
+          </label>`).join('');
+        updateRegionalButton();
+        filterRegionalOptions();
+      }
+
       function populateFilters() {
-        fillSelect(els.filterRegional, state.all, 'regional', 'Todas as regionais');
+        populateRegionalFilter();
         fillSelect(els.filterEscola, state.all, 'escola', 'Todas as escolas');
         fillSelect(els.filterProfissional, state.all, 'profissional', 'Todos os profissionais');
       }
@@ -1458,7 +1668,7 @@
       function applyFilters() {
         const query = normalize(els.searchInput.value);
         const selected = {
-          regional: els.filterRegional.value,
+          regionais: state.selectedRegionals,
           escola: els.filterEscola.value,
           profissional: els.filterProfissional.value
         };
@@ -1466,7 +1676,7 @@
         const endDate = parseDateInput(state.periodEnd, true);
 
         state.filtered = state.all.filter(record => {
-          if (!matchesSelect(record.regional, selected.regional)) return false;
+          if (selected.regionais.size && !selected.regionais.has(normalizeLoose(record.regional))) return false;
           if (!matchesSelect(record.escola, selected.escola)) return false;
           if (!matchesSelect(record.profissional, selected.profissional)) return false;
           if (startDate || endDate) {
@@ -1492,7 +1702,13 @@
       function updateActiveSummary() {
         const parts = [];
         if (els.searchInput.value.trim()) parts.push(`busca “${els.searchInput.value.trim()}”`);
-        [els.filterRegional, els.filterEscola, els.filterProfissional].forEach(select => {
+        if (state.selectedRegionals.size === 1) {
+          const key = [...state.selectedRegionals][0];
+          parts.push(state.regionalLabels.get(key) || key);
+        } else if (state.selectedRegionals.size > 1) {
+          parts.push(`${state.selectedRegionals.size} regionais`);
+        }
+        [els.filterEscola, els.filterProfissional].forEach(select => {
           if (select.value) parts.push(select.options[select.selectedIndex]?.text || select.value);
         });
         if (state.periodStart) parts.push(`a partir de ${formatShortDate(parseDateInput(state.periodStart))}`);
@@ -1761,7 +1977,11 @@
 
       function clearFilters() {
         els.searchInput.value = '';
-        els.filterRegional.value = '';
+        state.selectedRegionals.clear();
+        els.regionalSearch.value = '';
+        els.regionalOptions.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
+        updateRegionalButton();
+        filterRegionalOptions();
         els.filterEscola.value = '';
         els.filterProfissional.value = '';
         els.dateStart.value = '';
@@ -1788,8 +2008,54 @@
         searchTimer = setTimeout(() => { state.page = 1; applyFilters(); }, 130);
       });
 
-      [els.filterRegional, els.filterEscola, els.filterProfissional].forEach(select => {
+      [els.filterEscola, els.filterProfissional].forEach(select => {
         select.addEventListener('change', () => { state.page = 1; applyFilters(); });
+      });
+
+      function setRegionalMenu(open) {
+        els.regionalMultiSelect.classList.toggle('open', open);
+        els.regionalMultiBtn.setAttribute('aria-expanded', String(open));
+        if (open) {
+          els.regionalSearch.focus();
+        } else {
+          els.regionalSearch.value = '';
+          filterRegionalOptions();
+        }
+      }
+
+      els.regionalMultiBtn.addEventListener('click', () => {
+        setRegionalMenu(!els.regionalMultiSelect.classList.contains('open'));
+      });
+
+      els.regionalSearch.addEventListener('input', filterRegionalOptions);
+
+      els.regionalOptions.addEventListener('change', event => {
+        const checkbox = event.target.closest('input[type="checkbox"]');
+        if (!checkbox) return;
+        if (checkbox.checked) state.selectedRegionals.add(checkbox.value);
+        else state.selectedRegionals.delete(checkbox.value);
+        updateRegionalButton();
+        state.page = 1;
+        applyFilters();
+      });
+
+      els.clearRegionalsBtn.addEventListener('click', () => {
+        state.selectedRegionals.clear();
+        els.regionalOptions.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
+        updateRegionalButton();
+        state.page = 1;
+        applyFilters();
+      });
+
+      document.addEventListener('click', event => {
+        if (!els.regionalMultiSelect.contains(event.target)) setRegionalMenu(false);
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && els.regionalMultiSelect.classList.contains('open')) {
+          setRegionalMenu(false);
+          els.regionalMultiBtn.focus();
+        }
       });
 
       function updatePeriodFeedback(errorMessage = '') {
