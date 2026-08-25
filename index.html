@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     :root {
-      --bg: #f4f7fb; 
+      --bg: #f4f7fb;
       --surface: #ffffff;
       --surface-2: #f8fafc;
       --ink: #172033;
@@ -1102,7 +1102,7 @@
       <div class="section-heading">
         <div>
           <h2>Pesquisa e filtros</h2>
-          <p>Use os filtros das colunas C, D e E. No filtro Regional, você pode selecionar uma ou várias regionais ao mesmo tempo e, se desejar, refinar a consulta pelo período de envio.</p>
+          <p>Use os filtros das colunas C, D e E. No filtro Regional, você pode selecionar uma ou várias regionais ao mesmo tempo. Variações de escrita equivalentes são agrupadas automaticamente (por exemplo, “Carapina”, “CARAPINA”, “SRE Carapina”, “Nilza” e “SRE Nilza” são consolidadas como Carapina). Se desejar, refine também pelo período de envio.</p>
         </div>
       </div>
 
@@ -1308,6 +1308,8 @@
         usingFallback: false,
         selectedRegionals: new Set(),
         regionalLabels: new Map(),
+        regionalAliasToKey: new Map(),
+        regionalCanonicalLabels: new Map(),
         periodStart: '',
         periodEnd: ''
       };
@@ -1382,6 +1384,188 @@
 
       const normalizeLoose = (value) => normalize(value).replace(/["']/g, '').replace(/\s+/g, ' ').trim();
 
+      // Nomes oficiais das 11 SREs do Espírito Santo. Variações como
+      // "SRE Carapina", "carapina" e "Superintendência Regional de Educação de Carapina"
+      // passam a ser tratadas como a mesma regional.
+      const OFFICIAL_REGIONALS = [
+        ['afonso claudio', 'Afonso Cláudio'],
+        ['barra de sao francisco', 'Barra de São Francisco'],
+        ['cachoeiro de itapemirim', 'Cachoeiro de Itapemirim'],
+        ['carapina', 'Carapina'],
+        ['cariacica', 'Cariacica'],
+        ['colatina', 'Colatina'],
+        ['guacui', 'Guaçuí'],
+        ['linhares', 'Linhares'],
+        ['nova venecia', 'Nova Venécia'],
+        ['sao mateus', 'São Mateus'],
+        ['vila velha', 'Vila Velha']
+      ];
+
+      const cleanRegionalCore = (value) => normalizeLoose(value)
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\b(?:superintendencia\s+regional\s+de\s+educacao|superintendencia\s+regional|regional\s+de\s+educacao|sre)\b/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/^(?:de|da|do)\s+/, '')
+        .replace(/\s+(?:de|da|do)$/g, '')
+        .trim();
+
+      const levenshteinDistance = (a, b) => {
+        if (a === b) return 0;
+        if (!a) return b.length;
+        if (!b) return a.length;
+        let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+        for (let i = 1; i <= a.length; i += 1) {
+          const current = [i];
+          for (let j = 1; j <= b.length; j += 1) {
+            current[j] = Math.min(
+              current[j - 1] + 1,
+              previous[j] + 1,
+              previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+            );
+          }
+          previous = current;
+        }
+        return previous[b.length];
+      };
+
+      const fuzzySameRegional = (a, b) => {
+        if (!a || !b || a === b) return a === b;
+        const maxLen = Math.max(a.length, b.length);
+        const minLen = Math.min(a.length, b.length);
+        if (minLen < 4) return false;
+        const distance = levenshteinDistance(a, b);
+        if (maxLen <= 7) return distance <= 1;
+        return distance <= 2 && (1 - distance / maxLen) >= 0.84;
+      };
+
+      // Regra específica solicitada: registros preenchidos como "Nilza", "Nilze",
+      // "SRE Nilza" e pequenas variações de digitação pertencem à SRE Carapina.
+      // A normalização anterior já torna a comparação indiferente a maiúsculas,
+      // minúsculas, acentos e ao prefixo "SRE".
+      const isNilzaCarapinaAlias = (core) => {
+        if (!core) return false;
+        const tokens = core.split(/\s+/).filter(Boolean);
+        const aliases = ['nilza', 'nilze'];
+        return tokens.some(token => aliases.some(alias =>
+          token === alias || (token.length >= 4 && levenshteinDistance(token, alias) <= 1)
+        ));
+      };
+
+      const officialRegionalMatch = (core) => {
+        if (!core) return null;
+        if (isNilzaCarapinaAlias(core)) return { key: 'carapina', label: 'Carapina' };
+        for (const [key, label] of OFFICIAL_REGIONALS) {
+          if (core === key || core.endsWith(` ${key}`) || core.startsWith(`${key} `)) return { key, label };
+        }
+        let best = null;
+        for (const [key, label] of OFFICIAL_REGIONALS) {
+          const distance = levenshteinDistance(core, key);
+          const maxLen = Math.max(core.length, key.length);
+          const allowed = maxLen <= 7 ? 1 : 2;
+          if (distance <= allowed && (!best || distance < best.distance)) best = { key, label, distance };
+        }
+        return best;
+      };
+
+      const preferredRegionalLabel = (labels, officialLabel = '') => {
+        if (officialLabel) return officialLabel;
+        const ranked = [...labels.entries()].sort((a, b) => {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          const aGeneric = /\b(?:sre|superintendencia|regional)\b/i.test(a[0]) ? 1 : 0;
+          const bGeneric = /\b(?:sre|superintendencia|regional)\b/i.test(b[0]) ? 1 : 0;
+          if (aGeneric !== bGeneric) return aGeneric - bGeneric;
+          return a[0].length - b[0].length;
+        });
+        const label = ranked[0]?.[0] || 'Sem regional informada';
+        return label === label.toUpperCase()
+          ? label.toLocaleLowerCase('pt-BR').replace(/(^|\s)\S/g, c => c.toLocaleUpperCase('pt-BR'))
+          : label;
+      };
+
+      function rebuildRegionalCanonicalization(items) {
+        const rawGroups = new Map();
+        items.forEach(item => {
+          const raw = String(item.regional ?? '').replace(/\s+/g, ' ').trim();
+          if (!raw) return;
+          const core = cleanRegionalCore(raw);
+          if (!core) return;
+          if (!rawGroups.has(core)) rawGroups.set(core, new Map());
+          const labels = rawGroups.get(core);
+          labels.set(raw, (labels.get(raw) || 0) + 1);
+        });
+
+        const cores = [...rawGroups.keys()];
+        const parent = new Map(cores.map(core => [core, core]));
+        const find = (x) => {
+          let root = x;
+          while (parent.get(root) !== root) root = parent.get(root);
+          while (parent.get(x) !== x) {
+            const next = parent.get(x);
+            parent.set(x, root);
+            x = next;
+          }
+          return root;
+        };
+        const union = (a, b) => {
+          const ra = find(a);
+          const rb = find(b);
+          if (ra !== rb) parent.set(rb, ra);
+        };
+
+        const officialForCore = new Map();
+        cores.forEach(core => {
+          const match = officialRegionalMatch(core);
+          if (match) officialForCore.set(core, match);
+        });
+
+        for (let i = 0; i < cores.length; i += 1) {
+          for (let j = i + 1; j < cores.length; j += 1) {
+            const a = cores[i];
+            const b = cores[j];
+            const oa = officialForCore.get(a);
+            const ob = officialForCore.get(b);
+            if (oa && ob && oa.key === ob.key) {
+              union(a, b);
+            } else if (!oa && !ob && fuzzySameRegional(a, b)) {
+              union(a, b);
+            }
+          }
+        }
+
+        const clusters = new Map();
+        cores.forEach(core => {
+          const root = find(core);
+          if (!clusters.has(root)) clusters.set(root, []);
+          clusters.get(root).push(core);
+        });
+
+        state.regionalAliasToKey = new Map();
+        state.regionalCanonicalLabels = new Map();
+
+        clusters.forEach(clusterCores => {
+          let official = null;
+          const combinedLabels = new Map();
+          clusterCores.forEach(core => {
+            const match = officialForCore.get(core);
+            if (match) official = match;
+            rawGroups.get(core)?.forEach((count, label) => combinedLabels.set(label, (combinedLabels.get(label) || 0) + count));
+          });
+          const canonicalKey = official?.key || [...clusterCores].sort((a, b) => a.length - b.length || a.localeCompare(b))[0];
+          const canonicalLabel = preferredRegionalLabel(combinedLabels, official?.label || '');
+          state.regionalCanonicalLabels.set(canonicalKey, canonicalLabel);
+          clusterCores.forEach(core => state.regionalAliasToKey.set(core, canonicalKey));
+        });
+      }
+
+      const regionalKey = (value) => {
+        const core = cleanRegionalCore(value);
+        if (!core) return '';
+        const official = officialRegionalMatch(core);
+        if (official) return official.key;
+        return state.regionalAliasToKey.get(core) || core;
+      };
+
       const isUrl = (value) => /^https?:\/\//i.test(String(value ?? '').trim());
 
       const safeExternalUrl = (value) => {
@@ -1452,7 +1636,7 @@
 
       const formatShortDate = (date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 
-      const uniqueCount = (items, key) => new Set(items.map(item => normalizeLoose(item[key])).filter(Boolean)).size;
+      const uniqueCount = (items, key) => new Set(items.map(item => key === 'regional' ? regionalKey(item[key]) : normalizeLoose(item[key])).filter(Boolean)).size;
 
       const bestLabelMap = (items, key) => {
         const map = new Map();
@@ -1631,7 +1815,8 @@
       }
 
       function populateRegionalFilter() {
-        const labels = bestLabelMap(state.all, 'regional');
+        rebuildRegionalCanonicalization(state.all);
+        const labels = new Map(state.regionalCanonicalLabels);
         state.regionalLabels = labels;
         const validKeys = new Set(labels.keys());
         state.selectedRegionals = new Set([...state.selectedRegionals].filter(key => validKeys.has(key)));
@@ -1676,7 +1861,7 @@
         const endDate = parseDateInput(state.periodEnd, true);
 
         state.filtered = state.all.filter(record => {
-          if (selected.regionais.size && !selected.regionais.has(normalizeLoose(record.regional))) return false;
+          if (selected.regionais.size && !selected.regionais.has(regionalKey(record.regional))) return false;
           if (!matchesSelect(record.escola, selected.escola)) return false;
           if (!matchesSelect(record.profissional, selected.profissional)) return false;
           if (startDate || endDate) {
@@ -1727,9 +1912,9 @@
         const counts = new Map();
         const labels = new Map();
         state.filtered.forEach(record => {
-          const key = normalizeLoose(record.regional) || 'sem regional';
+          const key = regionalKey(record.regional) || 'sem regional';
           counts.set(key, (counts.get(key) || 0) + 1);
-          if (!labels.has(key)) labels.set(key, record.regional || 'Sem regional informada');
+          if (!labels.has(key)) labels.set(key, state.regionalLabels.get(key) || record.regional || 'Sem regional informada');
         });
 
         const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
