@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -1268,7 +1268,7 @@
       <div class="section-heading">
         <div>
           <h2>Pesquisa e filtros</h2>
-          <p>Use os filtros das colunas C, D e E. No filtro Regional, você pode selecionar uma ou várias regionais ao mesmo tempo. Variações de escrita equivalentes são agrupadas automaticamente (por exemplo, “Carapina”, “CARAPINA”, “SRE Carapina”, “Nilza” e “SRE Nilza” são consolidadas como Carapina). Se desejar, refine também pelo período de envio.</p>
+          <p>Use os filtros das colunas C, D e E. Eles funcionam em cascata: ao selecionar uma ou mais Regionais, o filtro Escola passa a mostrar somente as escolas dessas regionais; ao escolher uma Escola, o filtro Profissional é refinado da mesma forma. Variações de escrita equivalentes são agrupadas automaticamente (por exemplo, “Carapina”, “CARAPINA”, “SRE Carapina”, “Nilza” e “SRE Nilza” são consolidadas como Carapina). Se desejar, refine também pelo período de envio.</p>
         </div>
       </div>
 
@@ -2114,10 +2114,33 @@
         filterRegionalOptions();
       }
 
+      function recordsForSelectedRegionals() {
+        if (!state.selectedRegionals.size) return state.all;
+        return state.all.filter(record => state.selectedRegionals.has(regionalKey(record.regional)));
+      }
+
+      function recordsForSelectedSchool(items = recordsForSelectedRegionals()) {
+        const selectedSchool = els.filterEscola.value;
+        if (!selectedSchool) return items;
+        return items.filter(record => matchesSelect(record.escola, selectedSchool));
+      }
+
+      function updateCascadeFilters(level = 'all') {
+        // Regional → Escola → Profissional.
+        // Cada filtro descendente só recebe opções compatíveis com os filtros anteriores.
+        const regionalScope = recordsForSelectedRegionals();
+
+        if (level === 'regional' || level === 'all') {
+          fillSelect(els.filterEscola, regionalScope, 'escola', 'Todas as escolas');
+        }
+
+        const schoolScope = recordsForSelectedSchool(regionalScope);
+        fillSelect(els.filterProfissional, schoolScope, 'profissional', 'Todos os profissionais');
+      }
+
       function populateFilters() {
         populateRegionalFilter();
-        fillSelect(els.filterEscola, state.all, 'escola', 'Todas as escolas');
-        fillSelect(els.filterProfissional, state.all, 'profissional', 'Todos os profissionais');
+        updateCascadeFilters('all');
       }
 
       function updateDateBounds() {
@@ -2524,8 +2547,15 @@
         searchTimer = setTimeout(() => { state.page = 1; applyFilters(); }, 130);
       });
 
-      [els.filterEscola, els.filterProfissional].forEach(select => {
-        select.addEventListener('change', () => { state.page = 1; applyFilters(); });
+      els.filterEscola.addEventListener('change', () => {
+        updateCascadeFilters('school');
+        state.page = 1;
+        applyFilters();
+      });
+
+      els.filterProfissional.addEventListener('change', () => {
+        state.page = 1;
+        applyFilters();
       });
 
       function setRegionalMenu(open) {
@@ -2551,6 +2581,7 @@
         if (checkbox.checked) state.selectedRegionals.add(checkbox.value);
         else state.selectedRegionals.delete(checkbox.value);
         updateRegionalButton();
+        updateCascadeFilters('regional');
         state.page = 1;
         applyFilters();
       });
@@ -2559,6 +2590,7 @@
         state.selectedRegionals.clear();
         els.regionalOptions.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
         updateRegionalButton();
+        updateCascadeFilters('regional');
         state.page = 1;
         applyFilters();
       });
