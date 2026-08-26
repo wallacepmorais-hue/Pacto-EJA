@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#13213c" />
   <title>Repositório Pacto EJA</title>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
@@ -720,6 +720,172 @@
       font-size: 13px;
     }
 
+    .school-coverage {
+      margin-top: 16px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(145deg, #ffffff, #f8fbff);
+    }
+
+    .coverage-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .coverage-head h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 16px;
+      letter-spacing: -.02em;
+    }
+
+    .coverage-head p {
+      margin: 4px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .coverage-period {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border: 1px solid rgba(24, 90, 219, .16);
+      border-radius: 999px;
+      color: var(--brand);
+      background: rgba(24, 90, 219, .06);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .coverage-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .coverage-stat {
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fff;
+    }
+
+    .coverage-stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .coverage-stat-value {
+      margin-top: 5px;
+      color: var(--navy);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 840;
+      letter-spacing: -.03em;
+    }
+
+    .coverage-stat.missing .coverage-stat-value { color: var(--danger); }
+    .coverage-stat.registered .coverage-stat-value { color: var(--success); }
+
+    .coverage-progress {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e9eef6;
+    }
+
+    .coverage-progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0f8f8a, #185adb);
+      transition: width .25s ease;
+    }
+
+    .coverage-note {
+      margin: 9px 0 14px;
+      color: #667085;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .missing-schools-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    .missing-schools-head strong {
+      color: #344054;
+      font-size: 13px;
+    }
+
+    .missing-schools-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .missing-schools-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .missing-school-item {
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 10px 11px;
+      border: 1px solid #f0d5d1;
+      border-radius: 11px;
+      color: #7a271a;
+      background: #fff8f7;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .missing-school-number {
+      flex: 0 0 auto;
+      min-width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      color: #912018;
+      background: #fee4e2;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .coverage-complete {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid #abefc6;
+      border-radius: 12px;
+      color: #05603a;
+      background: #ecfdf3;
+      font-size: 13px;
+      font-weight: 720;
+      text-align: center;
+    }
+
     .results-panel {
       overflow: hidden;
     }
@@ -1031,7 +1197,7 @@
       .stat-note { display: none; }
       .filters-panel, .mini-chart-panel { padding: 16px; }
       .filter-grid, .date-filter-grid { grid-template-columns: 1fr; }
-      .temporal-controls, .temporal-kpis, .period-fields { grid-template-columns: 1fr; }
+      .temporal-controls, .temporal-kpis, .period-fields, .coverage-summary, .missing-schools-list { grid-template-columns: 1fr; }
       .period-fields .btn { grid-column: auto; width: 100%; }
       .filter-footer { align-items: stretch; }
       .filter-footer .btn { width: 100%; }
@@ -1161,7 +1327,7 @@
       <div class="section-heading">
         <div>
           <h2>Análise temporal</h2>
-          <p>Evolução dos registros ao longo do período, recalculada conforme os filtros aplicados.</p>
+          <p>Evolução dos registros ao longo do período, com visualização por dia ou por mês e recalculada conforme os filtros aplicados.</p>
         </div>
       </div>
 
@@ -1199,7 +1365,6 @@
           <select id="temporalGranularity">
             <option value="auto">Automático</option>
             <option value="day">Por dia</option>
-            <option value="week">Por semana</option>
             <option value="month">Por mês</option>
           </select>
         </div>
@@ -1237,6 +1402,40 @@
           <svg id="temporalChart" viewBox="0 0 960 300" role="img" aria-label="Gráfico de evolução temporal dos registros"></svg>
         </div>
         <div class="temporal-empty hidden" id="temporalEmpty">Não há registros com data válida para o período selecionado.</div>
+      </div>
+
+      <div class="school-coverage" id="schoolCoverage">
+        <div class="coverage-head">
+          <div>
+            <h3>Cobertura das escolas no período</h3>
+            <p>Compara os registros encontrados com a lista de 34 escolas de referência. A conferência ignora maiúsculas, minúsculas, acentos e prefixos institucionais e aceita coincidências parciais, como “EEEFM MARINETE” e “MARINETE”.</p>
+          </div>
+          <span class="coverage-period" id="coveragePeriod">Período completo</span>
+        </div>
+
+        <div class="coverage-summary">
+          <div class="coverage-stat registered">
+            <div class="coverage-stat-label">Com registro</div>
+            <div class="coverage-stat-value" id="coverageRegistered">—</div>
+          </div>
+          <div class="coverage-stat missing">
+            <div class="coverage-stat-label">Sem registro</div>
+            <div class="coverage-stat-value" id="coverageMissing">—</div>
+          </div>
+          <div class="coverage-stat">
+            <div class="coverage-stat-label">Cobertura</div>
+            <div class="coverage-stat-value" id="coveragePercent">—</div>
+          </div>
+        </div>
+
+        <div class="coverage-progress" aria-hidden="true"><div class="coverage-progress-bar" id="coverageBar"></div></div>
+        <div class="coverage-note" id="coverageNote">A lista considera o período aplicado e as regionais selecionadas. Busca geral, Escola e Profissional não alteram esta conferência.</div>
+
+        <div class="missing-schools-head">
+          <strong>Escolas ainda sem registro</strong>
+          <span id="missingSchoolsCount">—</span>
+        </div>
+        <div class="missing-schools-list" id="missingSchoolsList"></div>
       </div>
     </section>
 
@@ -1346,6 +1545,14 @@
         temporalEmpty: document.getElementById('temporalEmpty'),
         temporalChartHeading: document.getElementById('temporalChartHeading'),
         temporalChartSummary: document.getElementById('temporalChartSummary'),
+        coveragePeriod: document.getElementById('coveragePeriod'),
+        coverageRegistered: document.getElementById('coverageRegistered'),
+        coverageMissing: document.getElementById('coverageMissing'),
+        coveragePercent: document.getElementById('coveragePercent'),
+        coverageBar: document.getElementById('coverageBar'),
+        coverageNote: document.getElementById('coverageNote'),
+        missingSchoolsCount: document.getElementById('missingSchoolsCount'),
+        missingSchoolsList: document.getElementById('missingSchoolsList'),
         clearBtn: document.getElementById('clearBtn'),
         activeSummary: document.getElementById('activeSummary'),
         statRegistros: document.getElementById('statRegistros'),
@@ -1401,6 +1608,44 @@
         ['vila velha', 'Vila Velha']
       ];
 
+      // Lista de escolas de referência fornecida para a conferência de cobertura.
+      const TARGET_SCHOOLS = [
+        'EEEFM PROFESSORA MARIA DA PAZ PIMENTEL',
+        'CEEFMTI NAIR MIRANDA',
+        'EEEFM JOSE PINTO COELHO',
+        'EEEFM FREDERICO PRETTI',
+        'EEEM COLEGIO ESTADUAL DO ESPIRITO SANTO',
+        'EEEFM ELZA LEMOS ANDREATTA',
+        'EEEFM HILDEBRANDO LUCAS',
+        'EEEFM IRMA MARIA HORTA',
+        'EEEFM MAJOR ALFREDO PEDRO RABAYOLLI',
+        'EEEFM ALMIRANTE BARROSO',
+        'CEEJA',
+        'EEEF FRANCISCO ALVES MENDES',
+        'EEEF JONES JOSE DO NASCIMENTO',
+        'EEEFM FRANCISCO NASCIMENTO',
+        'EEEFM Marinete de Souza Lira',
+        'EEEFM ANTONIO JOSE PEIXOTO MIGUEL',
+        'EEEFM ANTONIO LUIZ VALIATI',
+        'EEEFM ARLINDO FERREIRA LOPES',
+        'EEEFM CAMPINHO',
+        'EEEFM D JOAO BATISTA DA MOTTA E ALBUQUERQUE',
+        'EEEFM ELICE BAPTISTA GAUDIO',
+        'EEEFM GERMANO ANDRE LUBE',
+        'EEEFM IRACEMA CONCEICAO SILVA',
+        'EEEFM JACARAIPE',
+        'EEEFM MARIA PENEDO',
+        'EEEFM SERRA SEDE',
+        'EEEFM VILA NOVA DE COLARES',
+        'EEEFM ZUMBI DOS PALMARES',
+        'EEEFM PROF JURACI MACHADO',
+        'EEEFM PROF MARIA OLINDA DE OLIVEIRA MENEZES',
+        'EEEF VIRGINIO PEREIRA',
+        'EEEFM PROF CYBELLE PASSOS BEZERRA LARA',
+        'EEEF PROFESSORA ADEVALNI AZEVEDO',
+        'EEEFM ARISTOBULO BARBOSA LEAO'
+      ];
+
       const cleanRegionalCore = (value) => normalizeLoose(value)
         .replace(/[^a-z0-9\s]/g, ' ')
         .replace(/\b(?:superintendencia\s+regional\s+de\s+educacao|superintendencia\s+regional|regional\s+de\s+educacao|sre)\b/g, ' ')
@@ -1427,6 +1672,45 @@
           previous = current;
         }
         return previous[b.length];
+      };
+
+      const schoolComparisonKey = (value) => {
+        let core = normalizeLoose(value)
+          .replace(/[^a-z0-9\s]/g, ' ')
+          .replace(/\b(?:eeefm|eeef|eeem|ceefmti|ceemti|ceef|emef)\b/g, ' ')
+          .replace(/\b(?:professora|professor|profa|prof)\b/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        // Compatibiliza abreviações e variações frequentes sem alterar o nome exibido.
+        core = core.replace(/^d\s+joao\b/, 'dom joao');
+        // Unifica variações de grafia de RABAYOLLI usadas nos registros.
+        core = core.replace(/\brab(?:ayolli|ayoli|aioli|aiolli)\b/g, 'rabayolli');
+        return core;
+      };
+
+      const schoolNamesMatch = (referenceName, observedName) => {
+        const a = schoolComparisonKey(referenceName);
+        const b = schoolComparisonKey(observedName);
+        if (!a || !b) return false;
+        if (a === b) return true;
+
+        // Coincidência parcial deliberada: permite, por exemplo,
+        // "Marinete de Souza Lira" x "Marinete".
+        const shorter = a.length <= b.length ? a : b;
+        const longer = a.length <= b.length ? b : a;
+        if (shorter.length >= 5 && (longer === shorter || longer.startsWith(`${shorter} `) || longer.endsWith(` ${shorter}`) || longer.includes(` ${shorter} `))) {
+          return true;
+        }
+
+        const tokensA = a.split(/\s+/).filter(token => token.length >= 2);
+        const tokensB = b.split(/\s+/).filter(token => token.length >= 2);
+        const smallTokens = tokensA.length <= tokensB.length ? tokensA : tokensB;
+        const largeTokens = new Set(tokensA.length <= tokensB.length ? tokensB : tokensA);
+        if (smallTokens.length >= 2 && smallTokens.every(token => largeTokens.has(token))) return true;
+
+        const maxLen = Math.max(a.length, b.length);
+        const distance = levenshteinDistance(a, b);
+        return maxLen >= 6 && distance <= Math.max(1, Math.floor(maxLen * 0.10)) && (1 - distance / maxLen) >= 0.90;
       };
 
       const fuzzySameRegional = (a, b) => {
@@ -1881,6 +2165,7 @@
         updateStats();
         renderBars();
         renderTemporal();
+        renderSchoolCoverage();
         renderResults();
       }
 
@@ -1936,26 +2221,12 @@
         }).join('');
       }
 
-      function startOfWeek(date) {
-        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const day = d.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
-        d.setDate(d.getDate() + diff);
-        return d;
-      }
-
       function temporalBucket(date, granularity) {
         if (granularity === 'month') {
           const start = new Date(date.getFullYear(), date.getMonth(), 1);
           const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
           const label = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit' }).format(start).replace('.', '');
           return { key, label, start };
-        }
-        if (granularity === 'week') {
-          const start = startOfWeek(date);
-          const end = new Date(start);
-          end.setDate(end.getDate() + 6);
-          return { key: dateKey(start), label: `${String(start.getDate()).padStart(2, '0')}/${String(start.getMonth() + 1).padStart(2, '0')}`, start, fullLabel: `${formatShortDate(start)} – ${formatShortDate(end)}` };
         }
         const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         return { key: dateKey(start), label: `${String(start.getDate()).padStart(2, '0')}/${String(start.getMonth() + 1).padStart(2, '0')}`, start };
@@ -1966,9 +2237,69 @@
         if (dates.length < 2) return 'day';
         const sorted = dates.slice().sort((a, b) => a - b);
         const spanDays = Math.max(1, Math.ceil((sorted[sorted.length - 1] - sorted[0]) / 86400000));
-        if (spanDays <= 45) return 'day';
-        if (spanDays <= 180) return 'week';
+        if (spanDays <= 62) return 'day';
         return 'month';
+      }
+
+      function recordsForSchoolCoverage() {
+        const startDate = parseDateInput(state.periodStart, false);
+        const endDate = parseDateInput(state.periodEnd, true);
+        return state.all.filter(record => {
+          if (state.selectedRegionals.size && !state.selectedRegionals.has(regionalKey(record.regional))) return false;
+          if (startDate || endDate) {
+            const recordDate = toDate(record.data);
+            if (!recordDate) return false;
+            if (startDate && recordDate < startDate) return false;
+            if (endDate && recordDate > endDate) return false;
+          }
+          return true;
+        });
+      }
+
+      function renderSchoolCoverage() {
+        const scope = recordsForSchoolCoverage();
+        const observedSchools = [...new Set(scope.map(record => String(record.escola || '').trim()).filter(Boolean))];
+        const matched = [];
+        const missing = [];
+
+        TARGET_SCHOOLS.forEach(reference => {
+          const found = observedSchools.some(observed => schoolNamesMatch(reference, observed));
+          (found ? matched : missing).push(reference);
+        });
+
+        const total = TARGET_SCHOOLS.length;
+        const percent = total ? Math.round((matched.length / total) * 100) : 0;
+        els.coverageRegistered.textContent = `${matched.length}/${total}`;
+        els.coverageMissing.textContent = missing.length.toLocaleString('pt-BR');
+        els.coveragePercent.textContent = `${percent}%`;
+        els.coverageBar.style.width = `${percent}%`;
+        els.missingSchoolsCount.textContent = missing.length === 1 ? '1 escola' : `${missing.length} escolas`;
+
+        const start = state.periodStart ? parseDateInput(state.periodStart, false) : null;
+        const end = state.periodEnd ? parseDateInput(state.periodEnd, false) : null;
+        if (!start && !end) {
+          els.coveragePeriod.textContent = 'Período completo';
+        } else {
+          const startLabel = start ? formatShortDate(start) : 'início dos dados';
+          const endLabel = end ? formatShortDate(end) : 'último registro';
+          els.coveragePeriod.textContent = `${startLabel} – ${endLabel}`;
+        }
+
+        const regionalText = state.selectedRegionals.size
+          ? ` Regional: ${[...state.selectedRegionals].map(key => state.regionalLabels.get(key) || key).join(', ')}.`
+          : ' Todas as regionais estão sendo consideradas.';
+        els.coverageNote.textContent = `A conferência usa somente o período aplicado e as regionais selecionadas; os filtros de Escola, Profissional e a busca geral não alteram esta lista.${regionalText}`;
+
+        if (!missing.length) {
+          els.missingSchoolsList.innerHTML = '<div class="coverage-complete">✓ Todas as 34 escolas da lista possuem pelo menos um registro no período selecionado.</div>';
+          return;
+        }
+
+        els.missingSchoolsList.innerHTML = missing.map((school, index) => `
+          <div class="missing-school-item">
+            <span class="missing-school-number">${index + 1}</span>
+            <span>${escapeHtml(school)}</span>
+          </div>`).join('');
       }
 
       function renderTemporal() {
@@ -2020,7 +2351,7 @@
         els.temporalPeakNote.textContent = `${formatShortDate(peakDate)} · registro${peak[1] === 1 ? '' : 's'}`;
 
         const granularity = chooseGranularity(dates);
-        const granularityLabel = granularity === 'day' ? 'dia' : granularity === 'week' ? 'semana' : 'mês';
+        const granularityLabel = granularity === 'day' ? 'dia' : 'mês';
         const grouped = new Map();
         dated.forEach(({ date }) => {
           const bucket = temporalBucket(date, granularity);
